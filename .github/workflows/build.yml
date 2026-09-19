@@ -45,6 +45,13 @@ jobs:
           cp /tmp/keep/pubspec.yaml pubspec.yaml
           cp /tmp/keep/main.dart lib/main.dart
 
+      # حقن صلاحية الكاميرا (مطلوبة لقارئ الباركود) داخل AndroidManifest.xml
+      - name: Add camera permission
+        run: |
+          sed -i 's#<manifest xmlns:android="http://schemas.android.com/apk/res/android">#<manifest xmlns:android="http://schemas.android.com/apk/res/android">\n    <uses-permission android:name="android.permission.CAMERA"/>#' \
+            android/app/src/main/AndroidManifest.xml
+          grep -q "android.permission.CAMERA" android/app/src/main/AndroidManifest.xml
+
       - run: flutter pub get
 
       - run: flutter build apk --release
