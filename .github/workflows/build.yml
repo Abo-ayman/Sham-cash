@@ -24,6 +24,16 @@ jobs:
           channel: stable
           cache: true
 
+      # تنزيل خط Tajawal Bold ليُضمَّن داخل التطبيق
+      - name: Download Tajawal font
+        run: |
+          mkdir -p assets/fonts
+          curl -fL --retry 3 -o assets/fonts/Tajawal-Bold.ttf \
+            https://github.com/google/fonts/raw/main/ofl/tajawal/Tajawal-Bold.ttf \
+            || { curl -fL -o /tmp/tajawal.zip "https://fonts.google.com/download?family=Tajawal" \
+                 && unzip -o /tmp/tajawal.zip "Tajawal-Bold.ttf" -d assets/fonts; }
+          test -s assets/fonts/Tajawal-Bold.ttf
+
       # المستودع يحتوي فقط pubspec.yaml و lib/main.dart،
       # وهذه الخطوة تولّد مجلد android تلقائياً دون المساس بملفاتك
       - name: Generate android folder
