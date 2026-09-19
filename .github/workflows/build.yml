@@ -34,16 +34,24 @@ jobs:
                  && unzip -o /tmp/tajawal.zip "Tajawal-Bold.ttf" -d assets/fonts; }
           test -s assets/fonts/Tajawal-Bold.ttf
 
-      # المستودع يحتوي فقط pubspec.yaml و lib/main.dart،
+          curl -fL --retry 3 -o assets/fonts/Tajawal-Medium.ttf \
+            https://github.com/google/fonts/raw/main/ofl/tajawal/Tajawal-Medium.ttf \
+            || { curl -fL -o /tmp/tajawal.zip "https://fonts.google.com/download?family=Tajawal" \
+                 && unzip -o /tmp/tajawal.zip "Tajawal-Medium.ttf" -d assets/fonts; }
+          test -s assets/fonts/Tajawal-Medium.ttf
+
+      # المستودع يحتوي فقط pubspec.yaml و lib/main.dart و lib/background.dart،
       # وهذه الخطوة تولّد مجلد android تلقائياً دون المساس بملفاتك
       - name: Generate android folder
         run: |
           mkdir -p /tmp/keep
           cp pubspec.yaml /tmp/keep/pubspec.yaml
           cp lib/main.dart /tmp/keep/main.dart
+          cp lib/background.dart /tmp/keep/background.dart
           flutter create --platforms=android --project-name wallet_app --org com.example .
           cp /tmp/keep/pubspec.yaml pubspec.yaml
           cp /tmp/keep/main.dart lib/main.dart
+          cp /tmp/keep/background.dart lib/background.dart
 
       # حقن صلاحية الكاميرا (مطلوبة لقارئ الباركود) داخل AndroidManifest.xml
       - name: Add camera permission
@@ -53,6 +61,15 @@ jobs:
           grep -q "android.permission.CAMERA" android/app/src/main/AndroidManifest.xml
 
       - run: flutter pub get
+
+      # توليد أيقونة التطبيق من assets/icon/icon.png إذا كان الملف موجوداً
+      - name: Generate app icon
+        run: |
+          if [ -f assets/icon/icon.png ]; then
+            flutter pub run flutter_launcher_icons
+          else
+            echo "⚠️ assets/icon/icon.png غير موجود — تخطّي توليد الأيقونة (سيُستخدم شعار Flutter الافتراضي)"
+          fi
 
       - run: flutter build apk --release
 
