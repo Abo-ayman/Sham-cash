@@ -4,13 +4,15 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:mobile_scanner/mobile_scanner.dart';
+import 'background.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
     statusBarColor: Colors.transparent,
     statusBarIconBrightness: Brightness.light,
-    systemNavigationBarColor: Color(0xFF1F3B86),
+    systemNavigationBarColor: Color(0xFF17306E),
     systemNavigationBarIconBrightness: Brightness.light,
   ));
   runApp(const WalletApp());
@@ -19,8 +21,8 @@ Future<void> main() async {
 // ───────────────────────── الألوان ─────────────────────────
 
 class AppColors {
-  static const bgTop = Color(0xFF0E1A47);
-  static const bgBottom = Color(0xFF1F3B86);
+  static const bgTop = Color(0xFF0A1436);
+  static const bgBottom = Color(0xFF17306E);
   static const primary = Color(0xFF4C8BFF);
   static const text = Colors.white;
   static const muted = Color(0xFFB4C0E6);
@@ -37,7 +39,7 @@ class AppColors {
 
 const _sectionStyle = TextStyle(
   fontSize: 19,
-  fontWeight: FontWeight.w700,
+  fontWeight: FontWeight.w500,
   color: AppColors.text,
 );
 
@@ -333,7 +335,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       'تم التحويل',
                       style: TextStyle(
                         fontSize: 16,
-                        fontWeight: FontWeight.w700,
+                        fontWeight: FontWeight.w500,
                         color: Colors.white,
                       ),
                     ),
@@ -370,11 +372,17 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ),
         child: CustomPaint(
-          painter: _HexPainter(),
+          painter: const HexPainter(),
           child: SafeArea(bottom: false, child: _body()),
         ),
       ),
-      floatingActionButton: _QrButton(onTap: () {}),
+      floatingActionButton: _QrButton(
+        onTap: () {
+          Navigator.of(context).push(
+            MaterialPageRoute(builder: (_) => const _QrScannerScreen()),
+          );
+        },
+      ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
       bottomNavigationBar: _BottomBar(index: _tab, onChanged: _goTo),
     );
@@ -437,7 +445,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         '$_unread',
                         style: const TextStyle(
                           fontSize: 12,
-                          fontWeight: FontWeight.w700,
+                          fontWeight: FontWeight.w500,
                           color: Colors.white,
                         ),
                       ),
@@ -515,7 +523,38 @@ class _HomeScreenState extends State<HomeScreen> {
         children: [
           _topBar(),
           const SizedBox(height: 22),
-          const Text('آخر التحويلات', style: _sectionStyle),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text('آخر التحويلات', style: _sectionStyle),
+              InkWell(
+                onTap: () {},
+                child: const Text(
+                  'متقدم',
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w500,
+                    color: AppColors.primary,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          Row(
+            children: [
+              const Icon(Icons.info_outline, size: 15, color: AppColors.muted),
+              const SizedBox(width: 6),
+              const Text(
+                'اضغط مطولاً لعرض الإيصال',
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w500,
+                  color: AppColors.muted,
+                ),
+              ),
+            ],
+          ),
           const SizedBox(height: 14),
           Expanded(
             child: _transfers.isEmpty
@@ -546,7 +585,7 @@ class _HomeScreenState extends State<HomeScreen> {
               textDirection: TextDirection.ltr,
               style: const TextStyle(
                 fontSize: 36,
-                fontWeight: FontWeight.w700,
+                fontWeight: FontWeight.w500,
                 color: AppColors.text,
               ),
             ),
@@ -569,7 +608,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     duration: const Duration(milliseconds: 200),
                     style: TextStyle(
                       fontSize: c == _selected ? 30 : 16,
-                      fontWeight: FontWeight.w700,
+                      fontWeight: FontWeight.w500,
                       color: c == _selected ? AppColors.text : AppColors.muted,
                     ),
                     child: Text(c),
@@ -714,7 +753,7 @@ class _SendDialogState extends State<_SendDialog> {
   Widget _buttons(String primaryLabel, VoidCallback onPrimary) {
     final shape = RoundedRectangleBorder(borderRadius: BorderRadius.circular(16));
     const pad = EdgeInsets.symmetric(vertical: 14);
-    const textStyle = TextStyle(fontSize: 16, fontWeight: FontWeight.w700);
+    const textStyle = TextStyle(fontSize: 16, fontWeight: FontWeight.w500);
     return Row(
       children: [
         Expanded(
@@ -835,34 +874,6 @@ class _SendDialogState extends State<_SendDialog> {
 // ───────────────────────── ويدجتات الواجهة ─────────────────────────
 
 /// أشكال سداسية باهتة في الخلفية
-class _HexPainter extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()..color = const Color(0x0DFFFFFF);
-
-    void hex(Offset c, double r) {
-      final path = Path();
-      for (int i = 0; i < 6; i++) {
-        final a = pi / 3 * i + pi / 6;
-        final p = Offset(c.dx + r * cos(a), c.dy + r * sin(a));
-        if (i == 0) {
-          path.moveTo(p.dx, p.dy);
-        } else {
-          path.lineTo(p.dx, p.dy);
-        }
-      }
-      path.close();
-      canvas.drawPath(path, paint);
-    }
-
-    hex(Offset(size.width * 0.72, size.height * 0.20), 190);
-    hex(Offset(size.width * 0.10, size.height * 0.42), 150);
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
-}
-
 class _QuickPanel extends StatelessWidget {
   const _QuickPanel();
 
@@ -925,7 +936,7 @@ class _Tile extends StatelessWidget {
               label,
               style: const TextStyle(
                 fontSize: 12,
-                fontWeight: FontWeight.w700,
+                fontWeight: FontWeight.w500,
                 color: Colors.white,
               ),
             ),
@@ -1012,7 +1023,7 @@ class _BigButton extends StatelessWidget {
               label,
               style: const TextStyle(
                 fontSize: 20,
-                fontWeight: FontWeight.w700,
+                fontWeight: FontWeight.w500,
                 color: Colors.white,
               ),
             ),
@@ -1046,7 +1057,7 @@ class _TransferTile extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
                     fontSize: 17,
-                    fontWeight: FontWeight.w700,
+                    fontWeight: FontWeight.w500,
                     color: Colors.white,
                   ),
                 ),
@@ -1056,7 +1067,7 @@ class _TransferTile extends StatelessWidget {
                 textDirection: TextDirection.ltr,
                 style: const TextStyle(
                   fontSize: 17,
-                  fontWeight: FontWeight.w700,
+                  fontWeight: FontWeight.w500,
                   color: AppColors.amountRed,
                 ),
               ),
@@ -1094,7 +1105,7 @@ class _TransferCard extends StatelessWidget {
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
                       fontSize: 19,
-                      fontWeight: FontWeight.w700,
+                      fontWeight: FontWeight.w500,
                       color: Colors.white,
                     ),
                   ),
@@ -1103,7 +1114,7 @@ class _TransferCard extends StatelessWidget {
                     '— ${moneyLabel(t.currency, t.amount)}',
                     style: const TextStyle(
                       fontSize: 19,
-                      fontWeight: FontWeight.w700,
+                      fontWeight: FontWeight.w500,
                       color: AppColors.amountRed,
                     ),
                   ),
@@ -1119,7 +1130,7 @@ class _TransferCard extends StatelessWidget {
                   textDirection: TextDirection.ltr,
                   style: const TextStyle(
                     fontSize: 15,
-                    fontWeight: FontWeight.w700,
+                    fontWeight: FontWeight.w500,
                     color: Colors.white,
                   ),
                 ),
@@ -1129,7 +1140,7 @@ class _TransferCard extends StatelessWidget {
                   textDirection: TextDirection.ltr,
                   style: const TextStyle(
                     fontSize: 14,
-                    fontWeight: FontWeight.w700,
+                    fontWeight: FontWeight.w500,
                     color: Colors.white,
                   ),
                 ),
@@ -1174,6 +1185,106 @@ class _Placeholder extends StatelessWidget {
   }
 }
 
+class _QrScannerScreen extends StatefulWidget {
+  const _QrScannerScreen();
+
+  @override
+  State<_QrScannerScreen> createState() => _QrScannerScreenState();
+}
+
+class _QrScannerScreenState extends State<_QrScannerScreen> {
+  final MobileScannerController _controller = MobileScannerController();
+  bool _handled = false; // يمنع فتح نتيجة أكثر من مرة لنفس المسح
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _onDetect(BarcodeCapture capture) {
+    if (_handled) return;
+    if (capture.barcodes.isEmpty) return;
+    final code = capture.barcodes.first.rawValue;
+    if (code == null) return;
+    _handled = true;
+    Navigator.of(context).pop(code);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.black,
+      body: Stack(
+        fit: StackFit.expand,
+        children: [
+          // معاينة الكاميرا
+          MobileScanner(controller: _controller, onDetect: _onDetect),
+
+          // تعتيم خفيف حول صندوق القراءة
+          Container(color: Colors.black.withOpacity(0.35)),
+
+          // صندوق القراءة نفسه
+          Center(
+            child: Container(
+              width: 250,
+              height: 250,
+              decoration: BoxDecoration(
+                border: Border.all(color: AppColors.primary, width: 3),
+                borderRadius: BorderRadius.circular(20),
+              ),
+            ),
+          ),
+
+          // شريط علوي: عنوان + زر رجوع + فلاش
+          SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.close, color: Colors.white, size: 28),
+                    onPressed: () => Navigator.of(context).pop(),
+                  ),
+                  const Text(
+                    'امسح رمز QR',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 17,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.flash_on, color: Colors.white, size: 26),
+                    onPressed: () => _controller.toggleTorch(),
+                  ),
+                ],
+              ),
+            ),
+          ),
+
+          // تلميح أسفل صندوق القراءة
+          Positioned(
+            bottom: 60,
+            left: 0,
+            right: 0,
+            child: const Text(
+              'وجّه الكاميرا نحو رمز QR',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: Colors.white70,
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class _QrButton extends StatelessWidget {
   final VoidCallback onTap;
   const _QrButton({required this.onTap});
@@ -1190,12 +1301,85 @@ class _QrButton extends StatelessWidget {
         child: const SizedBox(
           width: 76,
           height: 76,
-          child: Icon(Icons.qr_code_scanner_rounded,
-              color: Colors.white, size: 40),
+          child: Padding(
+            padding: EdgeInsets.all(18),
+            child: CustomPaint(painter: _ScanIconPainter()),
+          ),
         ),
       ),
     );
   }
+}
+
+/// أيقونة "إطار مسح": زوايا مفتوحة على الأطراف الأربعة + نمط QR صغير بالنص.
+class _ScanIconPainter extends CustomPainter {
+  const _ScanIconPainter();
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final w = size.width;
+    final h = size.height;
+    final cornerLen = w * 0.28;
+
+    final bracketPaint = Paint()
+      ..color = Colors.white
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = w * 0.11
+      ..strokeCap = StrokeCap.round;
+
+    void corner(Offset start, Offset mid, Offset end) {
+      final path = Path()
+        ..moveTo(start.dx, start.dy)
+        ..lineTo(mid.dx, mid.dy)
+        ..lineTo(end.dx, end.dy);
+      canvas.drawPath(path, bracketPaint);
+    }
+
+    // أعلى يسار
+    corner(Offset(0, cornerLen), const Offset(0, 0), Offset(cornerLen, 0));
+    // أعلى يمين
+    corner(Offset(w - cornerLen, 0), Offset(w, 0), Offset(w, cornerLen));
+    // أسفل يمين
+    corner(Offset(w, h - cornerLen), Offset(w, h), Offset(w - cornerLen, h));
+    // أسفل يسار
+    corner(Offset(cornerLen, h), Offset(0, h), Offset(0, h - cornerLen));
+
+    // نمط QR صغير بالمنتصف: مربعات صغيرة متفرقة
+    final dotPaint = Paint()
+      ..color = Colors.white
+      ..style = PaintingStyle.fill;
+
+    final cell = w * 0.11;
+    final gap = w * 0.045;
+    final startX = w * 0.30;
+    final startY = h * 0.34;
+
+    // نمط بسيط 3x2 يشبه جزء من رمز QR
+    const pattern = [
+      [1, 0, 1],
+      [0, 1, 0],
+    ];
+
+    for (int row = 0; row < pattern.length; row++) {
+      for (int col = 0; col < pattern[row].length; col++) {
+        if (pattern[row][col] == 1) {
+          final rect = Rect.fromLTWH(
+            startX + col * (cell + gap),
+            startY + row * (cell + gap),
+            cell,
+            cell,
+          );
+          canvas.drawRRect(
+            RRect.fromRectAndRadius(rect, Radius.circular(cell * 0.25)),
+            dotPaint,
+          );
+        }
+      }
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
 
 class _BottomBar extends StatelessWidget {
@@ -1244,7 +1428,7 @@ class _BottomBar extends StatelessWidget {
                             _labels[i],
                             style: TextStyle(
                               fontSize: 12,
-                              fontWeight: FontWeight.w700,
+                              fontWeight: FontWeight.w500,
                               color:
                                   i == index ? AppColors.primary : Colors.white,
                             ),
